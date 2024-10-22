@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Password Brute Force Visualization</title>
+		<link
+			href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+			rel="stylesheet"
+		/>
+		<style>
+			.strength-bar {
+				transition: width 0.3s ease;
+			}
+		</style>
+	</head>
+	<body class="bg-gray-100 font-sans p-6 flex flex-col min-h-screen">
+		<div class="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md">
+			<h1 class="text-2xl font-bold mb-4">
+				Password Brute Force Visualization
+			</h1>
+			<p class="mb-6 text-gray-700">
+				Visualize how easy or difficult your password is to crack using
+				brute-force methods.
+			</p>
+
+			<!-- Password Input -->
+			<input
+				id="passwordInput"
+				type="password"
+				placeholder="Enter your password"
+				class="border border-gray-300 p-2 w-full rounded mb-4"
+			/>
+
+			<!-- Attack Type Selector -->
+			<label class="block text-left text-gray-700 mb-2">Attack Speed:</label>
+			<select
+				id="attackSpeed"
+				class="border border-gray-300 p-2 w-full rounded mb-4"
+			>
+				<option value="1000">1,000 guesses/second (slow brute force)</option>
+				<option value="1000000">1,000,000 guesses/second (average)</option>
+				<option value="1000000000">
+					1,000,000,000 guesses/second (fast brute force)
+				</option>
+			</select>
+
+			<!-- Estimated Time -->
+			<p id="timeToCrack" class="text-lg font-semibold mt-4 mb-4">
+				Estimated time to crack:
+				<span id="timeValue" class="text-red-600">N/A</span>
+			</p>
+
+			<!-- Progress Bar -->
+			<div class="w-full bg-gray-300 rounded h-2 mb-4">
+				<div
+					id="strengthBar"
+					class="bg-red-600 h-full rounded strength-bar"
+				></div>
+			</div>
+
+			<!-- Suggestions -->
+			<p id="suggestions" class="text-sm text-gray-600">
+				Use at least 12-16 characters with a mix of uppercase, lowercase,
+				numbers, and symbols.
+			</p>
+		</div>
+
+		<footer class="mt-auto p-4 text-center text-gray-700">
+			&copy; <span id="current-year"></span> Password Brute Force Visualization
+		</footer>
+
+		<script>
+			// Get DOM elements
+			const passwordInput = document.getElementById("passwordInput");
+			const timeToCrack = document.getElementById("timeToCrack");
+			const strengthBar = document.getElementById("strengthBar");
+			const timeValue = document.getElementById("timeValue");
+			const attackSpeed = document.getElementById("attackSpeed");
+
+			// Event Listener for Password Input
+			passwordInput.addEventListener("input", updateVisualization);
+			attackSpeed.addEventListener("change", updateVisualization);
+
+			function updateVisualization() {
+				const password = passwordInput.value;
+				const guessesPerSecond = parseInt(attackSpeed.value);
+
+				const combinations = calculateCombinations(password);
+				const timeInSeconds = combinations / guessesPerSecond;
+
+				// Convert seconds into human-readable format
+				const readableTime = formatTime(timeInSeconds);
+
+				timeValue.textContent = readableTime;
+				updateStrengthBar(password.length);
+			}
+
+			// Calculate the number of possible combinations for the password
+			function calculateCombinations(password) {
+				let combinations = 1;
+				const hasLower = /[a-z]/.test(password);
+				const hasUpper = /[A-Z]/.test(password);
+				const hasNumbers = /\d/.test(password);
+				const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+				let possibleChars = 0;
+				if (hasLower) possibleChars += 26;
+				if (hasUpper) possibleChars += 26;
+				if (hasNumbers) possibleChars += 10;
+				if (hasSymbols) possibleChars += 32;
+
+				combinations = Math.pow(possibleChars, password.length);
+				return combinations;
+			}
+
+			// Convert time in seconds to a human-readable format
+			function formatTime(seconds) {
+				if (seconds < 60) return `${Math.round(seconds)} seconds`;
+				if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+				if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+				if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+				return `${Math.round(seconds / 31536000)} years`;
+			}
+
+			// Update the progress bar width based on password length
+			function updateStrengthBar(length) {
+				let percentage = (length / 16) * 100;
+				percentage = percentage > 100 ? 100 : percentage;
+				strengthBar.style.width = percentage + "%";
+
+				if (percentage < 50) {
+					strengthBar.className = "bg-red-600 h-full rounded strength-bar";
+				} else if (percentage < 75) {
+					strengthBar.className = "bg-yellow-600 h-full rounded strength-bar";
+				} else {
+					strengthBar.className = "bg-green-600 h-full rounded strength-bar";
+				}
+			}
+
+			// Set current year in footer
+			document.getElementById("current-year").textContent =
+				new Date().getFullYear();
+		</script>
+	</body>
+</html>
